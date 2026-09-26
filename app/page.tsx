@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Send, Loader, Sparkles, Search } from 'lucide-react';
+import { ArrowUp, Loader, Search, Sparkles } from 'lucide-react';
 import Message from '@/components/Message';
 import { motion } from 'framer-motion';
 
@@ -20,6 +20,11 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const suggestions = [
+    'What should I know about this week?',
+    'Find a quiet place to visit nearby',
+    'Explain a topic I have been curious about',
+  ];
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -97,45 +102,54 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-b from-primary via-secondary to-primary">
-      {/* Header */}
+    <div className="app-shell">
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-b border-slate-700/50 backdrop-blur-md bg-primary/80 sticky top-0 z-50"
+        className="topbar"
       >
-        <div className="max-w-4xl mx-auto px-4 py-6">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600">
-              <Sparkles className="w-6 h-6" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-white">AI Assistant</h1>
-              <p className="text-sm text-slate-400">Powered by OpenAI & Tavily Web Search</p>
-            </div>
-          </div>
-        </div>
+        <a className="wordmark" href="#top" aria-label="Doone research assistant">
+          <span className="brand-mark"><Sparkles aria-hidden="true" /></span>
+          <span className="brand-copy">
+            <strong>DOONE</strong>
+            <small>RESEARCH, AT YOUR PACE</small>
+          </span>
+        </a>
+        <div className="top-status"><span className="status-light" /> LIVE WEB SEARCH</div>
       </motion.div>
 
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto w-full px-4 py-8">
-          {messages.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="flex flex-col items-center justify-center h-96 text-center"
-            >
-              <div className="p-4 rounded-full bg-blue-500/10 mb-6">
-                <Search className="w-12 h-12 text-blue-400" />
-              </div>
-              <h2 className="text-3xl font-bold mb-2">Start a Conversation</h2>
-              <p className="text-slate-400 max-w-md">
-                Ask me anything! I can search the web in real-time, answer questions, and help with various tasks.
-              </p>
-            </motion.div>
-          ) : (
-            messages.map((message, index) => (
+      <main className={`conversation-area ${messages.length === 0 ? 'is-empty' : ''}`} id="top">
+        {messages.length === 0 ? (
+          <motion.section
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="welcome"
+          >
+            <div className="welcome-symbol"><Search aria-hidden="true" /></div>
+            <p className="eyebrow">A LITTLE SPACE TO THINK</p>
+            <h1>Curiosity,<br />meet clarity.</h1>
+            <p className="welcome-copy">
+              Ask a question, follow a hunch, or start somewhere unexpected.
+              I&apos;ll look across the web and bring back what matters.
+            </p>
+            <div className="suggestions" aria-label="Suggested questions">
+              {suggestions.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => {
+                    setInput(suggestion);
+                    inputRef.current?.focus();
+                  }}
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </motion.section>
+        ) : (
+          <div className="message-list">
+            {messages.map((message) => (
               <motion.div
                 key={message.id}
                 initial={{ opacity: 0, y: 10 }}
@@ -144,46 +158,41 @@ export default function Home() {
               >
                 <Message message={message} />
               </motion.div>
-            ))
-          )}
-          <div ref={messagesEndRef} />
-        </div>
-      </div>
+            ))}
+            <div ref={messagesEndRef} />
+          </div>
+        )}
+      </main>
 
-      {/* Input Area */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="border-t border-slate-700/50 backdrop-blur-md bg-primary/80 sticky bottom-0 py-6"
+        className="composer-dock"
       >
-        <div className="max-w-4xl mx-auto px-4">
-          <form onSubmit={handleSendMessage} className="flex gap-3">
-            <div className="flex-1 relative">
-              <input
-                ref={inputRef}
-                type="text"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                disabled={loading}
-                placeholder="Ask me anything..."
-                className="w-full px-4 py-3 rounded-lg bg-secondary border border-slate-600 text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition disabled:opacity-50"
-              />
-            </div>
+        <div className="composer-wrap">
+          <form onSubmit={handleSendMessage} className="composer">
+            <Search className="composer-search" aria-hidden="true" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={loading}
+              placeholder="Ask what’s on your mind"
+              aria-label="Ask a question"
+            />
             <button
               type="submit"
               disabled={loading || !input.trim()}
-              className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-lg font-medium transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              aria-label={loading ? 'Searching' : 'Send question'}
+              title={loading ? 'Searching' : 'Send question'}
             >
-              {loading ? (
-                <Loader className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className="w-5 h-5" />
-              )}
-              <span className="hidden sm:inline">Send</span>
+              {loading ? <Loader className="animate-spin" /> : <ArrowUp />}
             </button>
           </form>
-          <p className="text-xs text-slate-500 mt-3 text-center">
-            This AI can search the web in real-time. Always verify important information.
+          <p className="composer-note">
+            <span>GROUNDED IN LIVE SOURCES</span>
+            <span>TAKE WHAT&apos;S USEFUL</span>
           </p>
         </div>
       </motion.div>

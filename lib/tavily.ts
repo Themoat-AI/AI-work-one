@@ -14,6 +14,18 @@ export interface SearchResponse {
   query: string;
 }
 
+interface TavilyApiResult {
+  title?: string | null;
+  url?: string | null;
+  content?: string | null;
+}
+
+interface TavilyApiResponse {
+  results?: TavilyApiResult[];
+  answer?: string | null;
+  query?: string | null;
+}
+
 export async function searchWeb(query: string): Promise<SearchResponse> {
   if (!TAVILY_API_KEY) {
     throw new Error('TAVILY_API_KEY is not set. Add it to .env.local and restart the server.');
@@ -39,15 +51,15 @@ export async function searchWeb(query: string): Promise<SearchResponse> {
     throw new Error(`Tavily API error (${response.status}): ${details || response.statusText}`);
   }
 
-  const data = await response.json();
-  const results: SearchResult[] = (data.results || []).map((result: any) => ({
+  const data: TavilyApiResponse = await response.json();
+  const results: SearchResult[] = (data.results || []).map((result) => ({
     title: String(result.title || 'Untitled result'),
     url: String(result.url || '#'),
     content: String(result.content || ''),
     source: safeHostname(result.url),
   }));
 
-  return { results, answer: data.answer, query: data.query || query };
+  return { results, answer: data.answer ?? undefined, query: data.query || query };
 }
 
 function safeHostname(url: unknown) {
